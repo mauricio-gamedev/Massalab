@@ -48,6 +48,8 @@ jobs:
               | base64 --decode > MassaFF-Lab-source.tar.xz
           xz --test MassaFF-Lab-source.tar.xz
           tar -xJf MassaFF-Lab-source.tar.xz
+          # Keep every AIDL method explicitly numbered; Shizuku reserves destroy()'s transaction.
+          install -D source/fixes/ITextureService.aidl app/src/main/aidl/io/github/astromg01/massaff/service/ITextureService.aidl
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
