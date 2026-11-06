@@ -16,7 +16,7 @@ O projeto não modifica o APK nem os arquivos privados do Free Fire, não injeta
 
 O código-fonte Android está compactado em cinco partes Base64 em `source/`. O workflow remonta o arquivo `MassaFF-Lab-source.tar.xz`, extrai o projeto na raiz do runner, executa os testes unitários e compila o APK de depuração.
 
-A separação em partes é apenas uma forma de transportar o arquivo binário pelo conector GitHub; o workflow reconstrói o arquivo original antes do build.
+A separação em partes é apenas uma forma de transportar o arquivo binário pelo conector GitHub; o workflow reconstrói o arquivo original antes do build. O overlay `source/fixes/ITextureService.aidl` corrige a numeração de transações AIDL da interface Shizuku antes da compilação.
 
 ## Gerar APK
 
