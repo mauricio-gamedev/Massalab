@@ -88,6 +88,9 @@ jobs:
           # Keep every AIDL method explicitly numbered; Shizuku reserves destroy()'s transaction.
           install -D source/fixes/ITextureService.aidl app/src/main/aidl/io/github/astromg01/massaff/service/ITextureService.aidl
 
+      - name: Apply v0.2.2 exact-restore compatibility fix
+        run: python3 tools/patch-matchmaking-compat.py
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
