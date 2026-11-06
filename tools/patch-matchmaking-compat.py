@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Convert MassaFF Lab's forced-native action into an exact pre-profile restore."""
+"""MassaFF Lab 0.2.1: make exact pre-profile restore the prominent recovery action."""
 from pathlib import Path
 
 ROOT = Path('.')
@@ -10,52 +10,46 @@ def replace_once(text: str, old: str, new: str, label: str) -> str:
         raise SystemExit(f'{label}: esperado exatamente 1 trecho, encontrado {count}')
     return text.replace(old, new, 1)
 
-service_path = ROOT / 'app/src/main/java/io/github/astromg01/massaff/service/TextureUserService.java'
-service = service_path.read_text(encoding='utf-8')
-start_marker = '    /**\n     * Disable the experimental clay profile'
-end_marker = '    @Override\n    public String restoreState(String snapshotJson) {'
-start = service.find(start_marker)
-end = service.find(end_marker, start + len(start_marker))
-if start < 0 or end < 0:
-    raise SystemExit('Não foi possível localizar o método de compatibilidade para remover.')
-service = service[:start] + service[end:]
-service_path.write_text(service, encoding='utf-8')
-
-aidl_path = ROOT / 'app/src/main/aidl/io/github/astromg01/massaff/service/ITextureService.aidl'
-aidl = aidl_path.read_text(encoding='utf-8')
-aidl = aidl.replace('    String setNativeCompatibilityMode(String gamePackage, String snapshotJson) = 8;\n', '')
-aidl_path.write_text(aidl, encoding='utf-8')
-
 activity_path = ROOT / 'app/src/main/java/io/github/astromg01/massaff/MainActivity.kt'
 activity = activity_path.read_text(encoding='utf-8')
-activity = replace_once(activity, '                    onNativeCompatibility = ::useNativeCompatibilityMode,\n', '', 'callback nativo')
-activity = replace_once(activity, '    onNativeCompatibility: () -> Unit,\n', '', 'parâmetro UI nativo')
-start_marker = '    private fun useNativeCompatibilityMode() {'
-end_marker = '    private fun readAngleLogs() {'
-start = activity.find(start_marker)
-end = activity.find(end_marker, start + len(start_marker))
-if start < 0 or end < 0:
-    raise SystemExit('Não foi possível localizar a função de modo nativo para remover.')
-activity = activity[:start] + activity[end:]
-
-native_button = '''                    OutlinedButton(onClick = onNativeCompatibility, enabled = serviceReady && hasBackup && !isWorking, modifier = Modifier.fillMaxWidth()) {
-                        Text("Desativar massinha • usar driver nativo")
-                    }
-'''
-activity = replace_once(activity, native_button, '', 'botão que forçava driver nativo')
 activity = replace_once(activity,
-    '                        Text("Restaurar estado original completo")',
-    '                        Text("RESTAURAR: desativar perfil e voltar ao original")',
+    '                        Text("Restaurar configurações anteriores")',
+    '                        Text("URGENTE: RESTAURAR ORIGINAL / DESATIVAR MASSINHA")',
     'rótulo de restauração')
-old_warning = '                    Text("Compatibilidade nativa desliga o efeito de massinha, restaura as propriedades globais ANGLE anteriores e seleciona o driver GLES nativo apenas para o Free Fire. Não é bypass de emulador nem garantia sobre filas de matchmaking.", color = Color(0xFFFFC36B), style = MaterialTheme.typography.bodySmall)'
-new_warning = '                    Text("RECUPERAÇÃO: restaura exatamente o backup salvo antes do perfil, remove as alterações experimentais e não força outro driver. Mantenha o perfil desativado enquanto testa a compatibilidade do jogo.", color = Color(0xFFFFC36B), style = MaterialTheme.typography.bodySmall)'
-activity = replace_once(activity, old_warning, new_warning, 'aviso de compatibilidade')
-activity = activity.replace('Text("0.2.1", color = Color(0xFF92A196)', 'Text("0.2.2", color = Color(0xFF92A196)', 1)
+activity = replace_once(activity,
+    '                    Text("O filtro forceNearestFiltering e o nível LOD são recursos do ANGLE/Vulkan. Se o aparelho não usar esse backend no jogo, o visual não muda.", color = Color(0xFF9EAAA2), style = MaterialTheme.typography.bodySmall)',
+    '                    Text("RECUPERAÇÃO: este botão restaura exatamente o backup anterior à massinha, incluindo seleção ANGLE e filtros globais. Até a compatibilidade ser confirmada, mantenha o perfil desativado e não o use em partidas competitivas.", color = Color(0xFFFFC36B), style = MaterialTheme.typography.bodySmall)\n                    Text("O efeito depende de ANGLE/Vulkan e pode causar incompatibilidade ou stutter. Nenhum bypass de matchmaking faz parte do app.", color = Color(0xFF9EAAA2), style = MaterialTheme.typography.bodySmall)',
+    'aviso de recuperação')
+activity = replace_once(activity,
+    'Feche completamente o Free Fire antes de aplicar. Os filtros ANGLE são propriedades globais e podem afetar outros apps que usem ANGLE. O app salva um backup para restauração. Depois, reabra o jogo e confira os logs. Se houver stutter ou falha gráfica, volte para Equilibrado ou restaure.',
+    'Feche completamente o Free Fire antes de aplicar. Os filtros ANGLE são propriedades globais e podem afetar outros apps. A compatibilidade com o matchmaking do Free Fire ainda não foi confirmada: não use em partidas competitivas. O app salva um backup para restauração. Reaplique somente em teste controlado.',
+    'aviso antes de aplicar')
+activity = replace_once(activity,
+    'Configurações originais restauradas e verificadas. Reabra o jogo para confirmar o visual normal.',
+    'Configurações originais restauradas e verificadas. A massinha foi desativada; feche completamente o Free Fire antes de testar novamente.',
+    'mensagem pós-restauração')
+activity = activity.replace('Text("0.2.0", color = Color(0xFF92A196)', 'Text("0.2.1", color = Color(0xFF92A196)', 1)
 activity_path.write_text(activity, encoding='utf-8')
 
 gradle_path = ROOT / 'app/build.gradle.kts'
 gradle = gradle_path.read_text(encoding='utf-8')
-gradle = replace_once(gradle, 'versionName = "0.2.1"', 'versionName = "0.2.2"', 'versionName')
+gradle = replace_once(gradle, 'versionCode = 2', 'versionCode = 3', 'versionCode')
+gradle = replace_once(gradle, 'versionName = "0.2.0"', 'versionName = "0.2.1"', 'versionName')
 gradle_path.write_text(gradle, encoding='utf-8')
 
-print('Patch 0.2.2 aplicado: restaura o snapshot exato e remove a seleção forçada de driver.')
+readme_path = ROOT / 'README.md'
+readme = readme_path.read_text(encoding='utf-8')
+readme = replace_once(readme, '## Versão 0.2.0 — foco em fluidez e estabilidade', '## Versão 0.2.1 — restauração e compatibilidade', 'título README')
+readme = replace_once(readme,
+    '7. Se houver falha gráfica, stutter forte ou instabilidade, volte ao Equilibrado ou use **Restaurar configurações anteriores**.',
+    '7. Se houver qualquer incompatibilidade, use **URGENTE: RESTAURAR ORIGINAL / DESATIVAR MASSINHA** antes de voltar ao Free Fire. A ação restaura exatamente o snapshot prévio, sem forçar uma seleção de driver. Até a compatibilidade com matchmaking ser confirmada, não reaplique em partidas competitivas.',
+    'passo recuperação README')
+readme_path.write_text(readme, encoding='utf-8')
+
+checkpoint_path = ROOT / 'docs/SESSION_CHECKPOINT.md'
+checkpoint = checkpoint_path.read_text(encoding='utf-8')
+checkpoint = replace_once(checkpoint, '# Session checkpoint — MassaFF Lab 0.2.0', '# Session checkpoint — MassaFF Lab 0.2.1', 'título checkpoint')
+checkpoint += '\n\n## 0.2.1 compatibility response\n- The user reported solo matchmaking that appeared to contain emulator players/cheaters after enabling the ANGLE profile. Treat this as a serious compatibility regression, without inferring player skill or claiming the exact server-side cause.\n- The app now highlights the existing exact-snapshot restore action and warns against competitive use until compatibility is verified.\n- Restore uses the pre-profile snapshot for both ANGLE package selection and global feature properties, then verifies the restored values.\n- Do not implement emulator identity spoofing or anti-cheat/matchmaking bypass.\n- Reproduce only in controlled tests; separately isolate per-package ANGLE selection from global feature overrides before re-enabling the clay profile.\n'
+checkpoint_path.write_text(checkpoint, encoding='utf-8')
+
+print('Patch 0.2.1 aplicado: restauração exata destacada; perfil experimental sinalizado para não usar em ranqueadas.')
